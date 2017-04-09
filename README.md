@@ -15,7 +15,7 @@ Hex encoding, decoding, and dump formatting for binary data
 Add to your Gemfile:
 
 ```ruby
-gem 'philiprehberger-hex'
+gem "philiprehberger-hex"
 ```
 
 Or install directly:
