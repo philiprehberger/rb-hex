@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'Hex encoding, decoding, and dump formatting for binary data'
   spec.description = 'Encode and decode hexadecimal strings, produce xxd-style hex dumps, ' \
-                       'format hex output with configurable grouping, and validate hex strings.'
+                     'format hex output with configurable grouping, and validate hex strings.'
   spec.homepage = 'https://philiprehberger.com/open-source-packages/ruby/philiprehberger-hex'
   spec.license = 'MIT'
 
