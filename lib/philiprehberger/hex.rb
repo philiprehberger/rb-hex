@@ -18,18 +18,24 @@ module Philiprehberger
     # Encode a string to hexadecimal
     #
     # @param str [String]
+    # @param prefix [Boolean] prepend "0x" prefix
+    # @param uppercase [Boolean] use uppercase hex characters
     # @return [String] hex-encoded string
-    def self.encode(str)
+    def self.encode(str, prefix: false, uppercase: false)
       validate_string!(str)
-      str.unpack1('H*')
+      hex = str.unpack1('H*')
+      hex = hex.upcase if uppercase
+      prefix ? "0x#{hex}" : hex
     end
 
     # Decode a hexadecimal string to binary
+    # Automatically strips 0x/0X prefix if present
     #
     # @param hex [String] hex-encoded string
     # @return [String] decoded binary string
     def self.decode(hex)
       validate_string!(hex)
+      hex = strip_prefix(hex)
       raise Error, 'invalid hex string: odd length' if hex.length.odd?
       raise Error, 'invalid hex string: non-hex characters' unless valid?(hex)
 
@@ -138,5 +144,100 @@ module Philiprehberger
 
       SecureRandom.hex(n)
     end
+
+    # Extract a range of bytes from a hex string
+    #
+    # @param hex [String] hex-encoded string
+    # @param offset [Integer] byte offset to start from
+    # @param length [Integer] number of bytes to extract
+    # @return [String] hex substring
+    def self.extract_range(hex, offset:, length:)
+      validate_string!(hex)
+      hex = strip_prefix(hex)
+      raise Error, 'invalid hex string: odd length' if hex.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless valid?(hex)
+
+      total_bytes = hex.length / 2
+      raise Error, 'offset out of range' if offset.negative? || offset >= total_bytes
+      raise Error, 'length out of range' if length.negative? || (offset + length) > total_bytes
+
+      hex[offset * 2, length * 2]
+    end
+
+    # Reverse byte order of a hex string
+    #
+    # @param hex [String] hex-encoded string (even length)
+    # @return [String] hex string with reversed byte order
+    def self.swap_endian(hex)
+      validate_string!(hex)
+      hex = strip_prefix(hex)
+      raise Error, 'invalid hex string: odd length' if hex.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless valid?(hex)
+
+      hex.scan(/../).reverse.join
+    end
+
+    # Pad a hex string to a target byte length with zeros
+    #
+    # @param hex [String] hex-encoded string
+    # @param length [Integer] target byte length
+    # @param side [Symbol] :left or :right
+    # @return [String] padded hex string
+    def self.pad(hex, length:, side: :left)
+      validate_string!(hex)
+      hex = strip_prefix(hex)
+      raise Error, 'invalid hex string: odd length' if hex.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless valid?(hex)
+      raise Error, 'side must be :left or :right' unless %i[left right].include?(side)
+
+      target_chars = length * 2
+      return hex if hex.length >= target_chars
+
+      padding = '0' * (target_chars - hex.length)
+      side == :left ? "#{padding}#{hex}" : "#{hex}#{padding}"
+    end
+
+    # Convert a hex string to an integer
+    #
+    # @param hex [String] hex-encoded string
+    # @return [Integer]
+    def self.to_int(hex)
+      validate_string!(hex)
+      hex = strip_prefix(hex)
+      raise Error, 'invalid hex string: empty' if hex.empty?
+      raise Error, 'invalid hex string: non-hex characters' unless valid?(hex)
+
+      hex.to_i(16)
+    end
+
+    # Convert an integer to a hex string
+    #
+    # @param int [Integer]
+    # @param bytes [Integer, nil] optional zero-padded byte count
+    # @return [String] hex-encoded string
+    def self.from_int(int, bytes: nil)
+      raise Error, 'expected an Integer' unless int.is_a?(Integer)
+      raise Error, 'integer must be non-negative' if int.negative?
+
+      hex = int.to_s(16)
+      hex = "0#{hex}" if hex.length.odd?
+
+      if bytes
+        target = bytes * 2
+        hex = hex.rjust(target, '0') if hex.length < target
+      end
+
+      hex
+    end
+
+    # Strip 0x/0X prefix from a hex string
+    #
+    # @param hex [String]
+    # @return [String]
+    def self.strip_prefix(hex)
+      hex.start_with?('0x', '0X') ? hex[2..] : hex
+    end
+
+    private_class_method :strip_prefix
   end
 end

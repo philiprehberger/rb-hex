@@ -7,6 +7,17 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-03
+
+### Added
+- `Hex.encode` now accepts `prefix:` and `uppercase:` options for `0x` prefix and uppercase output
+- `Hex.decode` now auto-strips `0x`/`0X` prefix before decoding
+- `Hex.extract_range(hex, offset:, length:)` to extract byte ranges from hex strings
+- `Hex.swap_endian(hex)` to reverse byte order
+- `Hex.pad(hex, length:, side:)` to pad hex strings to target byte length
+- `Hex.to_int(hex)` to convert hex strings to integers
+- `Hex.from_int(int, bytes:)` to convert integers to hex strings
+
 ## [0.2.0] - 2026-04-01
 
 ### Added

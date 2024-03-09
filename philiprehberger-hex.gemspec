@@ -9,8 +9,9 @@ Gem::Specification.new do |spec|
   spec.email = ['me@philiprehberger.com']
 
   spec.summary = 'Hex encoding, decoding, and dump formatting for binary data'
-  spec.description = 'Encode and decode hexadecimal strings, produce xxd-style hex dumps, ' \
-                     'format hex output with configurable grouping, and validate hex strings.'
+  spec.description = 'Encode and decode hexadecimal strings with 0x prefix handling, produce xxd-style hex dumps, ' \
+                     'format hex output with configurable grouping, swap endianness, extract byte ranges, ' \
+                     'pad hex strings, convert between hex and integers, and validate hex strings.'
   spec.homepage = 'https://philiprehberger.com/open-source-packages/ruby/philiprehberger-hex'
   spec.license = 'MIT'
 
