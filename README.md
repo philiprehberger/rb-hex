@@ -68,6 +68,29 @@ Philiprehberger::Hex.valid?('xyz')     # => false
 
 ```ruby
 Philiprehberger::Hex.bytes_from('48656c6c6f')  # => [72, 101, 108, 108, 111]
+Philiprehberger::Hex.from_bytes([72, 101, 108, 108, 111])  # => "48656c6c6f"
+```
+
+### Normalize
+
+```ruby
+Philiprehberger::Hex.normalize('0x AA:BB-CC_dd')               # => "aabbccdd"
+Philiprehberger::Hex.normalize('0x AA:BB-CC_dd', uppercase: true) # => "AABBCCDD"
+```
+
+### Constant-time Comparison
+
+```ruby
+# Safe for comparing MAC/HMAC/signature hex values
+Philiprehberger::Hex.secure_equal?('abcd', 'ABCD')  # => true
+Philiprehberger::Hex.secure_equal?('aa',   'ab')    # => false
+```
+
+### Chunk
+
+```ruby
+Philiprehberger::Hex.chunk('aabbccdd', size: 2)    # => ["aabb", "ccdd"]
+Philiprehberger::Hex.chunk('aabbccddee', size: 2)  # => ["aabb", "ccdd", "ee"]
 ```
 
 ### Compare
@@ -77,10 +100,13 @@ Philiprehberger::Hex.compare('aabb', 'aacc')
 # => [{ offset: 1, expected: "bb", actual: "cc" }]
 ```
 
-### XOR
+### Bitwise Operations
 
 ```ruby
 Philiprehberger::Hex.xor('ff00', '0f0f')  # => "f00f"
+Philiprehberger::Hex.and('ff00', '0f0f')  # => "0f00"
+Philiprehberger::Hex.or('ff00', '0f0f')   # => "ff0f"
+Philiprehberger::Hex.not('ff00')          # => "00ff"
 ```
 
 ### Random Hex
@@ -126,8 +152,15 @@ Philiprehberger::Hex.from_int(255, bytes: 4)   # => "000000ff"
 | `Hex.format(str, group:)` | Format hex output with configurable grouping |
 | `Hex.valid?(str)` | Check if a string is valid hexadecimal |
 | `Hex.bytes_from(hex)` | Convert a hex string to an integer byte array |
+| `Hex.from_bytes(bytes)` | Build a hex string from an integer byte array |
+| `Hex.normalize(hex, uppercase:)` | Strip prefix, whitespace, and separators; return canonical hex |
+| `Hex.secure_equal?(hex1, hex2)` | Constant-time hex comparison, safe for MAC/HMAC checks |
+| `Hex.chunk(hex, size:)` | Split a hex string into an array of byte-aligned chunks |
 | `Hex.compare(hex1, hex2)` | Compare two hex strings and return byte-level differences |
 | `Hex.xor(hex1, hex2)` | XOR two hex strings and return the hex result |
+| `Hex.and(hex1, hex2)` | Bitwise AND of two hex strings |
+| `Hex.or(hex1, hex2)` | Bitwise OR of two hex strings |
+| `Hex.not(hex)` | Bitwise NOT (one's complement) of a hex string |
 | `Hex.random(n)` | Generate a random hex string of n bytes |
 | `Hex.extract_range(hex, offset:, length:)` | Extract a range of bytes from a hex string |
 | `Hex.swap_endian(hex)` | Reverse byte order of a hex string |

@@ -2,6 +2,7 @@
 
 require_relative 'hex/version'
 require 'securerandom'
+require 'openssl'
 
 module Philiprehberger
   module Hex
@@ -230,6 +231,94 @@ module Philiprehberger
       hex
     end
 
+    # Convert an array of byte integers (0..255) to a hex string
+    #
+    # @param bytes [Array<Integer>]
+    # @return [String] lowercase hex
+    def self.from_bytes(bytes)
+      raise Error, 'expected an Array' unless bytes.is_a?(Array)
+      unless bytes.all? { |b| b.is_a?(Integer) && b.between?(0, 255) }
+        raise Error, 'all elements must be integers in 0..255'
+      end
+
+      bytes.pack('C*').unpack1('H*')
+    end
+
+    # Normalize a hex string by stripping prefix, whitespace, and separators
+    # Validates that the result is even-length and purely hexadecimal
+    #
+    # @param hex [String]
+    # @param uppercase [Boolean] return uppercase instead of lowercase
+    # @return [String] canonical hex
+    def self.normalize(hex, uppercase: false)
+      validate_string!(hex)
+      stripped = strip_prefix(hex).gsub(/[\s:\-_]/, '')
+      raise Error, 'invalid hex string: odd length' if stripped.length.odd?
+      raise Error, 'invalid hex string: empty' if stripped.empty?
+      raise Error, 'invalid hex string: non-hex characters' unless valid?(stripped)
+
+      uppercase ? stripped.upcase : stripped.downcase
+    end
+
+    # Constant-time hex comparison, safe for MAC/HMAC/signature checks
+    # Comparison is case-insensitive; lengths must match (length is not secret)
+    #
+    # @param hex1 [String]
+    # @param hex2 [String]
+    # @return [Boolean]
+    def self.secure_equal?(hex1, hex2)
+      validate_string!(hex1)
+      validate_string!(hex2)
+      a = strip_prefix(hex1).downcase
+      b = strip_prefix(hex2).downcase
+      return false unless a.length == b.length
+
+      OpenSSL.fixed_length_secure_compare(a, b)
+    end
+
+    # Split a hex string into an array of byte-aligned chunks
+    # The last chunk may be shorter than size bytes if the input length is not a multiple
+    #
+    # @param hex [String]
+    # @param size [Integer] bytes per chunk (>= 1)
+    # @return [Array<String>]
+    def self.chunk(hex, size:)
+      validate_string!(hex)
+      raise Error, 'size must be a positive integer' unless size.is_a?(Integer) && size.positive?
+
+      stripped = strip_prefix(hex)
+      raise Error, 'invalid hex string: odd length' if stripped.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless stripped.empty? || valid?(stripped)
+
+      stripped.scan(/.{1,#{size * 2}}/)
+    end
+
+    # Bitwise AND of two equal-length hex strings
+    #
+    # @param hex1 [String]
+    # @param hex2 [String]
+    # @return [String] lowercase hex result
+    def self.and(hex1, hex2)
+      bitwise_binop(hex1, hex2) { |a, b| a & b }
+    end
+
+    # Bitwise OR of two equal-length hex strings
+    #
+    # @param hex1 [String]
+    # @param hex2 [String]
+    # @return [String] lowercase hex result
+    def self.or(hex1, hex2)
+      bitwise_binop(hex1, hex2) { |a, b| a | b }
+    end
+
+    # Bitwise NOT (one's complement) of a hex string
+    #
+    # @param hex [String]
+    # @return [String] lowercase hex result
+    def self.not(hex)
+      bytes_from(hex).map { |b| Kernel.format('%02x', ~b & 0xFF) }.join
+    end
+
     # Strip 0x/0X prefix from a hex string
     #
     # @param hex [String]
@@ -239,5 +328,15 @@ module Philiprehberger
     end
 
     private_class_method :strip_prefix
+
+    def self.bitwise_binop(hex1, hex2)
+      bytes1 = bytes_from(hex1)
+      bytes2 = bytes_from(hex2)
+      raise Error, 'hex strings must be the same length' unless bytes1.length == bytes2.length
+
+      bytes1.zip(bytes2).map { |a, b| Kernel.format('%02x', yield(a, b)) }.join
+    end
+
+    private_class_method :bitwise_binop
   end
 end
