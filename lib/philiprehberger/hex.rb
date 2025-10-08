@@ -260,6 +260,20 @@ module Philiprehberger
       uppercase ? stripped.upcase : stripped.downcase
     end
 
+    # Return the decoded byte count of a hex string without decoding
+    # Strips 0x/0X prefix and whitespace/separators before counting
+    #
+    # @param hex [String]
+    # @return [Integer] number of bytes the hex would decode to
+    def self.byte_length(hex)
+      validate_string!(hex)
+      cleaned = strip_prefix(hex).gsub(/[\s:\-_]/, '')
+      raise Error, 'invalid hex string: odd length' if cleaned.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless cleaned.empty? || valid?(cleaned)
+
+      cleaned.length / 2
+    end
+
     # Constant-time hex comparison, safe for MAC/HMAC/signature checks
     # Comparison is case-insensitive; lengths must match (length is not secret)
     #

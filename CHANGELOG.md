@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-15
+
+### Added
+- `Hex.byte_length(hex)` to return the decoded byte count after normalising prefix and whitespace, without decoding
+
 ## [0.4.0] - 2026-04-14
 
 ### Added
