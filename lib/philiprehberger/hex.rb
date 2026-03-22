@@ -45,10 +45,10 @@ module Philiprehberger
       bytes = str.bytes
 
       bytes.each_slice(16).with_index do |chunk, index|
-        offset = format('%08x', index * 16)
-        hex_part = chunk.each_slice(2).map { |pair| pair.map { |b| format('%02x', b) }.join }.join(' ')
+        offset = Kernel.format('%08x', index * 16)
+        hex_part = chunk.each_slice(2).map { |pair| pair.map { |b| Kernel.format('%02x', b) }.join }.join(' ')
         ascii_part = chunk.map { |b| b.between?(32, 126) ? b.chr : '.' }.join
-        lines << format('%-10s %-40s %s', "#{offset}:", hex_part, ascii_part)
+        lines << Kernel.format('%-10s %-40s %s', "#{offset}:", hex_part, ascii_part)
       end
 
       lines.join("\n")
