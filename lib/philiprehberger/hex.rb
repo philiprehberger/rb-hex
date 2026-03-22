@@ -8,6 +8,12 @@ module Philiprehberger
 
     HEX_PATTERN = /\A[0-9a-fA-F]*\z/
 
+    def self.validate_string!(str)
+      raise Error, 'expected a String' unless str.is_a?(String)
+    end
+
+    private_class_method :validate_string!
+
     # Encode a string to hexadecimal
     #
     # @param str [String]
