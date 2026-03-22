@@ -30,8 +30,8 @@ RSpec.describe Philiprehberger::Hex do
       expect(described_class.decode('68656c6c6f')).to eq('hello')
     end
 
-    it 'decodes an empty string' do
-      expect(described_class.decode('')).to eq('')
+    it 'raises Error for empty string' do
+      expect { described_class.decode('') }.to raise_error(described_class::Error)
     end
 
     it 'handles uppercase hex' do
