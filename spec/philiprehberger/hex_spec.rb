@@ -106,5 +106,116 @@ RSpec.describe Philiprehberger::Hex do
     it 'returns false for non-string' do
       expect(described_class.valid?(123)).to be false
     end
+
+    it 'returns true for mixed case hex' do
+      expect(described_class.valid?('aAbBcC')).to be true
+    end
+
+    it 'returns false for hex with spaces' do
+      expect(described_class.valid?('ab cd')).to be false
+    end
+
+    it 'returns true for single hex digit' do
+      expect(described_class.valid?('f')).to be true
+    end
+  end
+
+  describe 'encode/decode roundtrip' do
+    it 'roundtrips ASCII text' do
+      original = 'Hello, World!'
+      expect(described_class.decode(described_class.encode(original))).to eq(original)
+    end
+
+    it 'roundtrips empty string' do
+      encoded = described_class.encode('')
+      expect(encoded).to eq('')
+    end
+
+    it 'roundtrips binary data with null bytes' do
+      original = "\x00\x01\x02\x03"
+      decoded = described_class.decode(described_class.encode(original))
+      expect(decoded.bytes).to eq(original.bytes)
+    end
+
+    it 'roundtrips all zero bytes' do
+      original = "\x00" * 8
+      decoded = described_class.decode(described_class.encode(original))
+      expect(decoded.bytes).to eq([0] * 8)
+    end
+
+    it 'roundtrips all FF bytes' do
+      original = "\xff" * 4
+      decoded = described_class.decode(described_class.encode(original))
+      expect(decoded.bytes).to eq([255] * 4)
+    end
+
+    it 'roundtrips a single byte' do
+      original = "\x42"
+      expect(described_class.decode(described_class.encode(original))).to eq(original)
+    end
+  end
+
+  describe '.encode edge cases' do
+    it 'produces lowercase hex output' do
+      result = described_class.encode("\xff")
+      expect(result).to eq('ff')
+      expect(result).to match(/\A[0-9a-f]+\z/)
+    end
+
+    it 'encodes long strings' do
+      long_str = 'x' * 10_000
+      encoded = described_class.encode(long_str)
+      expect(encoded.length).to eq(20_000)
+    end
+  end
+
+  describe '.decode edge cases' do
+    it 'decodes uppercase hex input' do
+      expect(described_class.decode('FF').bytes).to eq([255])
+    end
+
+    it 'decodes mixed case hex input' do
+      expect(described_class.decode('fF').bytes).to eq([255])
+    end
+
+    it 'raises Error for non-string input' do
+      expect { described_class.decode(123) }.to raise_error(described_class::Error)
+    end
+
+    it 'raises Error for hex with 0x prefix' do
+      expect { described_class.decode('0xff') }.to raise_error(described_class::Error, /non-hex/)
+    end
+
+    it 'raises Error for single character' do
+      expect { described_class.decode('a') }.to raise_error(described_class::Error, /odd length/)
+    end
+  end
+
+  describe '.dump edge cases' do
+    it 'shows printable ASCII in text column' do
+      result = described_class.dump('ABC')
+      expect(result).to include('ABC')
+    end
+
+    it 'raises Error for non-string' do
+      expect { described_class.dump(123) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe '.format edge cases' do
+    it 'uses default group size of 2' do
+      result = described_class.format('AB')
+      expect(result).to be_a(String)
+      expect(result).to include('41')
+    end
+
+    it 'handles large group size' do
+      result = described_class.format('hello', group: 100)
+      expect(result).to eq('68656c6c6f')
+    end
+
+    it 'raises Error for non-string' do
+      expect { described_class.format(42) }.to raise_error(described_class::Error)
+    end
   end
 end
