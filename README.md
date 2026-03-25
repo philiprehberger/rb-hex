@@ -27,7 +27,7 @@ gem install philiprehberger-hex
 ## Usage
 
 ```ruby
-require 'philiprehberger/hex'
+require "philiprehberger/hex"
 
 Philiprehberger::Hex.encode('hello')     # => "68656c6c6f"
 Philiprehberger::Hex.decode('68656c6c6f') # => "hello"
@@ -68,8 +68,8 @@ Philiprehberger::Hex.valid?('xyz')     # => false
 
 ```bash
 bundle install
-bundle exec rspec      # Run tests
-bundle exec rubocop    # Check code style
+bundle exec rspec
+bundle exec rubocop
 ```
 
 ## License
