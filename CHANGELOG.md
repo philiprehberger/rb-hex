@@ -7,6 +7,17 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-01
+
+### Added
+- `Hex.bytes_from(hex)` to convert hex string to integer byte array
+- `Hex.compare(hex1, hex2)` to find byte-level differences between hex strings
+- `Hex.xor(hex1, hex2)` to XOR two hex strings
+- `Hex.random(n)` to generate random hex strings
+
+### Fixed
+- Fix Support section formatting to match template
+
 ## [0.1.5] - 2026-03-31
 
 ### Added

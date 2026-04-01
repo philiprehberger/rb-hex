@@ -218,4 +218,97 @@ RSpec.describe Philiprehberger::Hex do
       expect { described_class.format(42) }.to raise_error(described_class::Error)
     end
   end
+
+  describe '.bytes_from' do
+    it 'converts hex to byte array' do
+      expect(described_class.bytes_from('48656c6c6f')).to eq([0x48, 0x65, 0x6c, 0x6c, 0x6f])
+    end
+
+    it 'handles single byte' do
+      expect(described_class.bytes_from('ff')).to eq([255])
+    end
+
+    it 'handles all zeros' do
+      expect(described_class.bytes_from('0000')).to eq([0, 0])
+    end
+
+    it 'raises Error for odd-length hex' do
+      expect { described_class.bytes_from('abc') }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for invalid hex' do
+      expect { described_class.bytes_from('zzzz') }.to raise_error(described_class::Error, /non-hex/)
+    end
+
+    it 'raises Error for non-string' do
+      expect { described_class.bytes_from(123) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe '.compare' do
+    it 'returns empty array for identical hex strings' do
+      expect(described_class.compare('aabb', 'aabb')).to eq([])
+    end
+
+    it 'returns differences' do
+      diffs = described_class.compare('aabb', 'aacc')
+      expect(diffs.length).to eq(1)
+      expect(diffs[0][:offset]).to eq(1)
+      expect(diffs[0][:expected]).to eq('bb')
+      expect(diffs[0][:actual]).to eq('cc')
+    end
+
+    it 'handles different lengths' do
+      diffs = described_class.compare('aabb', 'aa')
+      expect(diffs.length).to eq(1)
+      expect(diffs[0][:offset]).to eq(1)
+      expect(diffs[0][:expected]).to eq('bb')
+      expect(diffs[0][:actual]).to be_nil
+    end
+
+    it 'detects all differing bytes' do
+      diffs = described_class.compare('0102', 'ff03')
+      expect(diffs.length).to eq(2)
+    end
+  end
+
+  describe '.xor' do
+    it 'XORs two hex strings' do
+      expect(described_class.xor('ff00', '0f0f')).to eq('f00f')
+    end
+
+    it 'XOR with itself produces zeros' do
+      expect(described_class.xor('abcd', 'abcd')).to eq('0000')
+    end
+
+    it 'XOR with zeros is identity' do
+      expect(described_class.xor('abcd', '0000')).to eq('abcd')
+    end
+
+    it 'raises Error for different lengths' do
+      expect { described_class.xor('aabb', 'aa') }.to raise_error(described_class::Error, /same length/)
+    end
+  end
+
+  describe '.random' do
+    it 'generates hex string of correct length' do
+      result = described_class.random(8)
+      expect(result.length).to eq(16)
+    end
+
+    it 'generates valid hex' do
+      result = described_class.random(4)
+      expect(described_class.valid?(result)).to be true
+    end
+
+    it 'raises Error for non-positive count' do
+      expect { described_class.random(0) }.to raise_error(described_class::Error)
+      expect { described_class.random(-1) }.to raise_error(described_class::Error)
+    end
+
+    it 'generates different values on each call' do
+      results = Array.new(10) { described_class.random(16) }
+      expect(results.uniq.length).to eq(10)
+    end
+  end
 end

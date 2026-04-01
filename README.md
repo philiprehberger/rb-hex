@@ -54,6 +54,31 @@ Philiprehberger::Hex.valid?('abcdef')  # => true
 Philiprehberger::Hex.valid?('xyz')     # => false
 ```
 
+### Byte Array
+
+```ruby
+Philiprehberger::Hex.bytes_from('48656c6c6f')  # => [72, 101, 108, 108, 111]
+```
+
+### Compare
+
+```ruby
+Philiprehberger::Hex.compare('aabb', 'aacc')
+# => [{ offset: 1, expected: "bb", actual: "cc" }]
+```
+
+### XOR
+
+```ruby
+Philiprehberger::Hex.xor('ff00', '0f0f')  # => "f00f"
+```
+
+### Random Hex
+
+```ruby
+Philiprehberger::Hex.random(16)  # => "a3f2b7c891d4e5f6..." (32 hex chars)
+```
+
 ## API
 
 | Method | Description |
@@ -63,6 +88,10 @@ Philiprehberger::Hex.valid?('xyz')     # => false
 | `Hex.dump(str)` | Produce an xxd-style hex dump |
 | `Hex.format(str, group:)` | Format hex output with configurable grouping |
 | `Hex.valid?(str)` | Check if a string is valid hexadecimal |
+| `Hex.bytes_from(hex)` | Convert a hex string to an integer byte array |
+| `Hex.compare(hex1, hex2)` | Compare two hex strings and return byte-level differences |
+| `Hex.xor(hex1, hex2)` | XOR two hex strings and return the hex result |
+| `Hex.random(n)` | Generate a random hex string of n bytes |
 
 ## Development
 

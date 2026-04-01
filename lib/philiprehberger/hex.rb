@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'hex/version'
+require 'securerandom'
 
 module Philiprehberger
   module Hex
@@ -74,6 +75,68 @@ module Philiprehberger
       return false if str.empty?
 
       HEX_PATTERN.match?(str)
+    end
+
+    # Convert a hex string to an array of integer byte values
+    #
+    # @param hex [String] hex-encoded string (even length)
+    # @return [Array<Integer>] array of byte values
+    def self.bytes_from(hex)
+      validate_string!(hex)
+      raise Error, 'invalid hex string: odd length' if hex.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless valid?(hex)
+
+      [hex].pack('H*').bytes
+    end
+
+    # Compare two hex strings and return byte-level differences
+    #
+    # @param hex1 [String] first hex string
+    # @param hex2 [String] second hex string
+    # @return [Array<Hash>] array of { offset:, expected:, actual: } for differing bytes
+    def self.compare(hex1, hex2)
+      bytes1 = bytes_from(hex1)
+      bytes2 = bytes_from(hex2)
+
+      max_len = [bytes1.length, bytes2.length].max
+      diffs = []
+
+      max_len.times do |i|
+        b1 = bytes1[i]
+        b2 = bytes2[i]
+        next if b1 == b2
+
+        diffs << {
+          offset: i,
+          expected: b1 ? Kernel.format('%02x', b1) : nil,
+          actual: b2 ? Kernel.format('%02x', b2) : nil
+        }
+      end
+
+      diffs
+    end
+
+    # XOR two hex strings and return the hex result
+    #
+    # @param hex1 [String] first hex string
+    # @param hex2 [String] second hex string
+    # @return [String] hex-encoded XOR result
+    def self.xor(hex1, hex2)
+      bytes1 = bytes_from(hex1)
+      bytes2 = bytes_from(hex2)
+      raise Error, 'hex strings must be the same length' unless bytes1.length == bytes2.length
+
+      bytes1.zip(bytes2).map { |a, b| Kernel.format('%02x', a ^ b) }.join
+    end
+
+    # Generate a random hex string of n bytes
+    #
+    # @param n [Integer] number of random bytes
+    # @return [String] hex-encoded random string (2*n characters)
+    def self.random(n)
+      raise Error, 'byte count must be positive' unless n.is_a?(Integer) && n.positive?
+
+      SecureRandom.hex(n)
     end
   end
 end
