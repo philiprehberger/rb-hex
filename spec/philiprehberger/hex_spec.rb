@@ -23,6 +23,26 @@ RSpec.describe Philiprehberger::Hex do
     it 'raises Error for non-string' do
       expect { described_class.encode(123) }.to raise_error(described_class::Error)
     end
+
+    it 'adds 0x prefix when requested' do
+      expect(described_class.encode('hello', prefix: true)).to eq('0x68656c6c6f')
+    end
+
+    it 'produces uppercase output when requested' do
+      expect(described_class.encode('hello', uppercase: true)).to eq('68656C6C6F')
+    end
+
+    it 'combines prefix and uppercase' do
+      expect(described_class.encode("\xff", prefix: true, uppercase: true)).to eq('0xFF')
+    end
+
+    it 'returns empty string with prefix false for empty input' do
+      expect(described_class.encode('', prefix: false)).to eq('')
+    end
+
+    it 'returns 0x prefix for empty input when requested' do
+      expect(described_class.encode('', prefix: true)).to eq('0x')
+    end
   end
 
   describe '.decode' do
@@ -44,6 +64,18 @@ RSpec.describe Philiprehberger::Hex do
 
     it 'raises Error for invalid hex characters' do
       expect { described_class.decode('zzzz') }.to raise_error(described_class::Error, /non-hex/)
+    end
+
+    it 'auto-strips 0x prefix' do
+      expect(described_class.decode('0x68656c6c6f')).to eq('hello')
+    end
+
+    it 'auto-strips 0X prefix' do
+      expect(described_class.decode('0X48454C4C4F')).to eq('HELLO')
+    end
+
+    it 'decodes 0x-prefixed uppercase hex' do
+      expect(described_class.decode('0xFF').bytes).to eq([255])
     end
   end
 
@@ -182,8 +214,8 @@ RSpec.describe Philiprehberger::Hex do
       expect { described_class.decode(123) }.to raise_error(described_class::Error)
     end
 
-    it 'raises Error for hex with 0x prefix' do
-      expect { described_class.decode('0xff') }.to raise_error(described_class::Error, /non-hex/)
+    it 'auto-strips 0x prefix in edge case' do
+      expect(described_class.decode('0x00ff').bytes).to eq([0, 255])
     end
 
     it 'raises Error for single character' do
@@ -309,6 +341,213 @@ RSpec.describe Philiprehberger::Hex do
     it 'generates different values on each call' do
       results = Array.new(10) { described_class.random(16) }
       expect(results.uniq.length).to eq(10)
+    end
+  end
+
+  describe '.extract_range' do
+    it 'extracts bytes from the beginning' do
+      expect(described_class.extract_range('aabbccdd', offset: 0, length: 2)).to eq('aabb')
+    end
+
+    it 'extracts bytes from the middle' do
+      expect(described_class.extract_range('aabbccdd', offset: 1, length: 2)).to eq('bbcc')
+    end
+
+    it 'extracts bytes from the end' do
+      expect(described_class.extract_range('aabbccdd', offset: 2, length: 2)).to eq('ccdd')
+    end
+
+    it 'extracts a single byte' do
+      expect(described_class.extract_range('aabbcc', offset: 1, length: 1)).to eq('bb')
+    end
+
+    it 'strips 0x prefix before extracting' do
+      expect(described_class.extract_range('0xaabbccdd', offset: 0, length: 2)).to eq('aabb')
+    end
+
+    it 'raises Error for offset out of range' do
+      expect { described_class.extract_range('aabb', offset: 2, length: 1) }.to raise_error(described_class::Error, /offset/)
+    end
+
+    it 'raises Error for negative offset' do
+      expect { described_class.extract_range('aabb', offset: -1, length: 1) }.to raise_error(described_class::Error, /offset/)
+    end
+
+    it 'raises Error for length exceeding data' do
+      expect { described_class.extract_range('aabb', offset: 0, length: 3) }.to raise_error(described_class::Error, /length/)
+    end
+
+    it 'raises Error for odd-length hex' do
+      expect { described_class.extract_range('aab', offset: 0, length: 1) }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for invalid hex' do
+      expect { described_class.extract_range('zzzz', offset: 0, length: 1) }.to raise_error(described_class::Error, /non-hex/)
+    end
+  end
+
+  describe '.swap_endian' do
+    it 'swaps two bytes' do
+      expect(described_class.swap_endian('aabb')).to eq('bbaa')
+    end
+
+    it 'swaps three bytes' do
+      expect(described_class.swap_endian('aabbcc')).to eq('ccbbaa')
+    end
+
+    it 'swaps four bytes' do
+      expect(described_class.swap_endian('01020304')).to eq('04030201')
+    end
+
+    it 'returns same for single byte' do
+      expect(described_class.swap_endian('ff')).to eq('ff')
+    end
+
+    it 'strips 0x prefix before swapping' do
+      expect(described_class.swap_endian('0xaabb')).to eq('bbaa')
+    end
+
+    it 'raises Error for odd-length hex' do
+      expect { described_class.swap_endian('aab') }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for invalid hex' do
+      expect { described_class.swap_endian('zzzz') }.to raise_error(described_class::Error, /non-hex/)
+    end
+  end
+
+  describe '.pad' do
+    it 'left-pads to target byte length' do
+      expect(described_class.pad('ff', length: 4)).to eq('000000ff')
+    end
+
+    it 'right-pads to target byte length' do
+      expect(described_class.pad('ff', length: 4, side: :right)).to eq('ff000000')
+    end
+
+    it 'returns unchanged if already at target length' do
+      expect(described_class.pad('aabb', length: 2)).to eq('aabb')
+    end
+
+    it 'returns unchanged if longer than target length' do
+      expect(described_class.pad('aabbcc', length: 2)).to eq('aabbcc')
+    end
+
+    it 'pads empty-ish two-char hex' do
+      expect(described_class.pad('00', length: 3)).to eq('000000')
+    end
+
+    it 'strips 0x prefix before padding' do
+      expect(described_class.pad('0xff', length: 4)).to eq('000000ff')
+    end
+
+    it 'raises Error for invalid side' do
+      expect { described_class.pad('ff', length: 2, side: :center) }.to raise_error(described_class::Error, /side/)
+    end
+
+    it 'raises Error for odd-length hex' do
+      expect { described_class.pad('f', length: 2) }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for invalid hex' do
+      expect { described_class.pad('zz', length: 2) }.to raise_error(described_class::Error, /non-hex/)
+    end
+  end
+
+  describe '.to_int' do
+    it 'converts hex to integer' do
+      expect(described_class.to_int('ff')).to eq(255)
+    end
+
+    it 'converts multi-byte hex' do
+      expect(described_class.to_int('0100')).to eq(256)
+    end
+
+    it 'handles leading zeros' do
+      expect(described_class.to_int('00ff')).to eq(255)
+    end
+
+    it 'strips 0x prefix' do
+      expect(described_class.to_int('0xff')).to eq(255)
+    end
+
+    it 'strips 0X prefix' do
+      expect(described_class.to_int('0XFF')).to eq(255)
+    end
+
+    it 'converts zero' do
+      expect(described_class.to_int('00')).to eq(0)
+    end
+
+    it 'raises Error for empty string after strip' do
+      expect { described_class.to_int('') }.to raise_error(described_class::Error, /empty/)
+    end
+
+    it 'raises Error for invalid hex' do
+      expect { described_class.to_int('zz') }.to raise_error(described_class::Error, /non-hex/)
+    end
+
+    it 'raises Error for non-string' do
+      expect { described_class.to_int(123) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe '.from_int' do
+    it 'converts integer to hex' do
+      expect(described_class.from_int(255)).to eq('ff')
+    end
+
+    it 'converts zero' do
+      expect(described_class.from_int(0)).to eq('00')
+    end
+
+    it 'pads to byte count' do
+      expect(described_class.from_int(255, bytes: 4)).to eq('000000ff')
+    end
+
+    it 'converts large integer' do
+      expect(described_class.from_int(65_535)).to eq('ffff')
+    end
+
+    it 'ensures even-length output' do
+      expect(described_class.from_int(1)).to eq('01')
+    end
+
+    it 'does not truncate if value exceeds byte count' do
+      expect(described_class.from_int(65_535, bytes: 1)).to eq('ffff')
+    end
+
+    it 'raises Error for non-integer' do
+      expect { described_class.from_int('ff') }.to raise_error(described_class::Error, /Integer/)
+    end
+
+    it 'raises Error for negative integer' do
+      expect { described_class.from_int(-1) }.to raise_error(described_class::Error, /non-negative/)
+    end
+  end
+
+  describe 'encode/decode roundtrip with prefix' do
+    it 'roundtrips with 0x prefix' do
+      original = 'hello'
+      encoded = described_class.encode(original, prefix: true)
+      expect(described_class.decode(encoded)).to eq(original)
+    end
+
+    it 'roundtrips with uppercase and prefix' do
+      original = "\xde\xad\xbe\xef"
+      encoded = described_class.encode(original, prefix: true, uppercase: true)
+      expect(described_class.decode(encoded).bytes).to eq(original.bytes)
+    end
+  end
+
+  describe 'to_int/from_int roundtrip' do
+    it 'roundtrips through integer' do
+      hex = 'deadbeef'
+      expect(described_class.from_int(described_class.to_int(hex))).to eq(hex)
+    end
+
+    it 'roundtrips with padding' do
+      expect(described_class.from_int(described_class.to_int('00ff'), bytes: 2)).to eq('00ff')
     end
   end
 end

@@ -33,6 +33,16 @@ Philiprehberger::Hex.encode('hello')     # => "68656c6c6f"
 Philiprehberger::Hex.decode('68656c6c6f') # => "hello"
 ```
 
+### Prefix and Uppercase
+
+```ruby
+Philiprehberger::Hex.encode('hello', prefix: true)              # => "0x68656c6c6f"
+Philiprehberger::Hex.encode('hello', uppercase: true)           # => "68656C6C6F"
+Philiprehberger::Hex.encode('hello', prefix: true, uppercase: true) # => "0x68656C6C6F"
+
+Philiprehberger::Hex.decode('0x68656c6c6f')  # => "hello" (auto-strips prefix)
+```
+
 ### Hex Dump
 
 ```ruby
@@ -79,12 +89,39 @@ Philiprehberger::Hex.xor('ff00', '0f0f')  # => "f00f"
 Philiprehberger::Hex.random(16)  # => "a3f2b7c891d4e5f6..." (32 hex chars)
 ```
 
+### Extract Range
+
+```ruby
+Philiprehberger::Hex.extract_range('aabbccdd', offset: 1, length: 2)  # => "bbcc"
+```
+
+### Swap Endian
+
+```ruby
+Philiprehberger::Hex.swap_endian('aabbccdd')  # => "ddccbbaa"
+```
+
+### Pad
+
+```ruby
+Philiprehberger::Hex.pad('ff', length: 4)                # => "000000ff"
+Philiprehberger::Hex.pad('ff', length: 4, side: :right)  # => "ff000000"
+```
+
+### Integer Conversion
+
+```ruby
+Philiprehberger::Hex.to_int('ff')              # => 255
+Philiprehberger::Hex.from_int(255)             # => "ff"
+Philiprehberger::Hex.from_int(255, bytes: 4)   # => "000000ff"
+```
+
 ## API
 
 | Method | Description |
 |--------|-------------|
-| `Hex.encode(str)` | Encode a string to hexadecimal |
-| `Hex.decode(hex)` | Decode a hexadecimal string to binary |
+| `Hex.encode(str, prefix:, uppercase:)` | Encode a string to hexadecimal with optional prefix and case |
+| `Hex.decode(hex)` | Decode a hexadecimal string to binary (auto-strips `0x`) |
 | `Hex.dump(str)` | Produce an xxd-style hex dump |
 | `Hex.format(str, group:)` | Format hex output with configurable grouping |
 | `Hex.valid?(str)` | Check if a string is valid hexadecimal |
@@ -92,6 +129,11 @@ Philiprehberger::Hex.random(16)  # => "a3f2b7c891d4e5f6..." (32 hex chars)
 | `Hex.compare(hex1, hex2)` | Compare two hex strings and return byte-level differences |
 | `Hex.xor(hex1, hex2)` | XOR two hex strings and return the hex result |
 | `Hex.random(n)` | Generate a random hex string of n bytes |
+| `Hex.extract_range(hex, offset:, length:)` | Extract a range of bytes from a hex string |
+| `Hex.swap_endian(hex)` | Reverse byte order of a hex string |
+| `Hex.pad(hex, length:, side:)` | Pad hex string to target byte length with zeros |
+| `Hex.to_int(hex)` | Convert a hex string to an integer |
+| `Hex.from_int(int, bytes:)` | Convert an integer to a hex string |
 
 ## Development
 
