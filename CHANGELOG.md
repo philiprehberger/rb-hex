@@ -7,6 +7,15 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-14
+
+### Added
+- `Hex.from_bytes(bytes)` to build a hex string from an array of byte integers
+- `Hex.normalize(hex, uppercase:)` to strip prefix, whitespace, and separators and return canonical hex
+- `Hex.secure_equal?(hex1, hex2)` for constant-time hex comparison (MAC/HMAC safe)
+- `Hex.chunk(hex, size:)` to split a hex string into byte-aligned chunks
+- `Hex.and(hex1, hex2)`, `Hex.or(hex1, hex2)`, `Hex.not(hex)` bitwise operations
+
 ## [0.3.0] - 2026-04-03
 
 ### Added

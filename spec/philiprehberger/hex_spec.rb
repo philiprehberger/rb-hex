@@ -550,4 +550,221 @@ RSpec.describe Philiprehberger::Hex do
       expect(described_class.from_int(described_class.to_int('00ff'), bytes: 2)).to eq('00ff')
     end
   end
+
+  describe '.from_bytes' do
+    it 'builds hex from byte array' do
+      expect(described_class.from_bytes([0x48, 0x65, 0x6c, 0x6c, 0x6f])).to eq('48656c6c6f')
+    end
+
+    it 'handles empty array' do
+      expect(described_class.from_bytes([])).to eq('')
+    end
+
+    it 'handles single byte' do
+      expect(described_class.from_bytes([255])).to eq('ff')
+    end
+
+    it 'handles all zeros' do
+      expect(described_class.from_bytes([0, 0, 0])).to eq('000000')
+    end
+
+    it 'roundtrips through bytes_from' do
+      hex = 'deadbeef'
+      expect(described_class.from_bytes(described_class.bytes_from(hex))).to eq(hex)
+    end
+
+    it 'raises Error for non-array' do
+      expect { described_class.from_bytes('ff') }.to raise_error(described_class::Error, /Array/)
+    end
+
+    it 'raises Error for non-integer elements' do
+      expect { described_class.from_bytes([1, 'x']) }.to raise_error(described_class::Error)
+    end
+
+    it 'raises Error for out-of-range byte' do
+      expect { described_class.from_bytes([256]) }.to raise_error(described_class::Error)
+    end
+
+    it 'raises Error for negative byte' do
+      expect { described_class.from_bytes([-1]) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe '.normalize' do
+    it 'strips 0x prefix' do
+      expect(described_class.normalize('0xaabb')).to eq('aabb')
+    end
+
+    it 'strips 0X prefix' do
+      expect(described_class.normalize('0XAABB')).to eq('aabb')
+    end
+
+    it 'strips whitespace' do
+      expect(described_class.normalize('aa bb  cc')).to eq('aabbcc')
+    end
+
+    it 'strips colon separators' do
+      expect(described_class.normalize('aa:bb:cc')).to eq('aabbcc')
+    end
+
+    it 'strips dash separators' do
+      expect(described_class.normalize('aa-bb-cc')).to eq('aabbcc')
+    end
+
+    it 'strips underscore separators' do
+      expect(described_class.normalize('aa_bb_cc')).to eq('aabbcc')
+    end
+
+    it 'lowercases mixed case input' do
+      expect(described_class.normalize('AaBbCc')).to eq('aabbcc')
+    end
+
+    it 'combines prefix, whitespace, separators, and case' do
+      expect(described_class.normalize('0x AA:BB-CC_dd')).to eq('aabbccdd')
+    end
+
+    it 'returns uppercase when requested' do
+      expect(described_class.normalize('aa:bb', uppercase: true)).to eq('AABB')
+    end
+
+    it 'raises Error for odd length after normalization' do
+      expect { described_class.normalize('abc') }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for non-hex characters' do
+      expect { described_class.normalize('zzzz') }.to raise_error(described_class::Error, /non-hex/)
+    end
+
+    it 'raises Error for empty input after stripping' do
+      expect { described_class.normalize('  ') }.to raise_error(described_class::Error, /empty/)
+    end
+
+    it 'raises Error for non-string' do
+      expect { described_class.normalize(123) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe '.secure_equal?' do
+    it 'returns true for identical hex' do
+      expect(described_class.secure_equal?('aabb', 'aabb')).to be true
+    end
+
+    it 'returns true for case-insensitive equal hex' do
+      expect(described_class.secure_equal?('aabb', 'AABB')).to be true
+    end
+
+    it 'returns false for different hex' do
+      expect(described_class.secure_equal?('aabb', 'aacc')).to be false
+    end
+
+    it 'returns false for different lengths' do
+      expect(described_class.secure_equal?('aa', 'aabb')).to be false
+    end
+
+    it 'handles 0x prefixes transparently' do
+      expect(described_class.secure_equal?('0xaabb', 'aabb')).to be true
+    end
+
+    it 'raises Error for non-string first arg' do
+      expect { described_class.secure_equal?(123, 'ff') }.to raise_error(described_class::Error)
+    end
+
+    it 'raises Error for non-string second arg' do
+      expect { described_class.secure_equal?('ff', 123) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe '.chunk' do
+    it 'splits into 2-byte chunks' do
+      expect(described_class.chunk('aabbccdd', size: 2)).to eq(%w[aabb ccdd])
+    end
+
+    it 'splits into 1-byte chunks' do
+      expect(described_class.chunk('aabbcc', size: 1)).to eq(%w[aa bb cc])
+    end
+
+    it 'returns last chunk shorter than size when not aligned' do
+      expect(described_class.chunk('aabbccddee', size: 2)).to eq(%w[aabb ccdd ee])
+    end
+
+    it 'returns empty array for empty hex' do
+      expect(described_class.chunk('', size: 2)).to eq([])
+    end
+
+    it 'strips 0x prefix before chunking' do
+      expect(described_class.chunk('0xaabbccdd', size: 2)).to eq(%w[aabb ccdd])
+    end
+
+    it 'raises Error for non-positive size' do
+      expect { described_class.chunk('aabb', size: 0) }.to raise_error(described_class::Error, /size/)
+      expect { described_class.chunk('aabb', size: -1) }.to raise_error(described_class::Error, /size/)
+    end
+
+    it 'raises Error for non-integer size' do
+      expect { described_class.chunk('aabb', size: 2.5) }.to raise_error(described_class::Error, /size/)
+    end
+
+    it 'raises Error for odd-length hex' do
+      expect { described_class.chunk('aab', size: 1) }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for invalid hex' do
+      expect { described_class.chunk('zzzz', size: 1) }.to raise_error(described_class::Error, /non-hex/)
+    end
+  end
+
+  describe '.and' do
+    it 'ANDs two hex strings' do
+      expect(described_class.and('ff00', '0f0f')).to eq('0f00')
+    end
+
+    it 'AND with itself is identity' do
+      expect(described_class.and('abcd', 'abcd')).to eq('abcd')
+    end
+
+    it 'AND with zeros is zero' do
+      expect(described_class.and('abcd', '0000')).to eq('0000')
+    end
+
+    it 'raises Error for different lengths' do
+      expect { described_class.and('aabb', 'aa') }.to raise_error(described_class::Error, /same length/)
+    end
+  end
+
+  describe '.or' do
+    it 'ORs two hex strings' do
+      expect(described_class.or('ff00', '0f0f')).to eq('ff0f')
+    end
+
+    it 'OR with zeros is identity' do
+      expect(described_class.or('abcd', '0000')).to eq('abcd')
+    end
+
+    it 'OR with all ones is all ones' do
+      expect(described_class.or('abcd', 'ffff')).to eq('ffff')
+    end
+
+    it 'raises Error for different lengths' do
+      expect { described_class.or('aabb', 'aa') }.to raise_error(described_class::Error, /same length/)
+    end
+  end
+
+  describe '.not' do
+    it 'inverts bits' do
+      expect(described_class.not('ff00')).to eq('00ff')
+    end
+
+    it 'inverts mixed bits' do
+      expect(described_class.not('a5')).to eq('5a')
+    end
+
+    it 'applied twice returns original' do
+      original = 'deadbeef'
+      expect(described_class.not(described_class.not(original))).to eq(original)
+    end
+
+    it 'raises Error for invalid hex' do
+      expect { described_class.not('zz') }.to raise_error(described_class::Error)
+    end
+  end
 end
