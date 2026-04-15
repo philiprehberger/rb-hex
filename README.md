@@ -78,6 +78,14 @@ Philiprehberger::Hex.normalize('0x AA:BB-CC_dd')               # => "aabbccdd"
 Philiprehberger::Hex.normalize('0x AA:BB-CC_dd', uppercase: true) # => "AABBCCDD"
 ```
 
+### Byte Length
+
+```ruby
+Philiprehberger::Hex.byte_length('aabbcc')         # => 3
+Philiprehberger::Hex.byte_length('0x AA:BB-CC_dd') # => 4
+Philiprehberger::Hex.byte_length('')               # => 0
+```
+
 ### Constant-time Comparison
 
 ```ruby
@@ -154,6 +162,7 @@ Philiprehberger::Hex.from_int(255, bytes: 4)   # => "000000ff"
 | `Hex.bytes_from(hex)` | Convert a hex string to an integer byte array |
 | `Hex.from_bytes(bytes)` | Build a hex string from an integer byte array |
 | `Hex.normalize(hex, uppercase:)` | Strip prefix, whitespace, and separators; return canonical hex |
+| `Hex.byte_length(hex)` | Return the decoded byte count after normalising prefix and whitespace, without decoding |
 | `Hex.secure_equal?(hex1, hex2)` | Constant-time hex comparison, safe for MAC/HMAC checks |
 | `Hex.chunk(hex, size:)` | Split a hex string into an array of byte-aligned chunks |
 | `Hex.compare(hex1, hex2)` | Compare two hex strings and return byte-level differences |

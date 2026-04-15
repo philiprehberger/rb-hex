@@ -644,6 +644,60 @@ RSpec.describe Philiprehberger::Hex do
     end
   end
 
+  describe '.byte_length' do
+    it 'returns byte count for plain hex' do
+      expect(described_class.byte_length('aabbcc')).to eq(3)
+    end
+
+    it 'returns byte count for hex with 0x prefix' do
+      expect(described_class.byte_length('0xaabbcc')).to eq(3)
+    end
+
+    it 'returns byte count for hex with 0X prefix' do
+      expect(described_class.byte_length('0XAABB')).to eq(2)
+    end
+
+    it 'returns byte count for uppercase hex' do
+      expect(described_class.byte_length('DEADBEEF')).to eq(4)
+    end
+
+    it 'strips whitespace before counting' do
+      expect(described_class.byte_length('aa bb  cc')).to eq(3)
+    end
+
+    it 'strips colon separators before counting' do
+      expect(described_class.byte_length('aa:bb:cc')).to eq(3)
+    end
+
+    it 'strips dash separators before counting' do
+      expect(described_class.byte_length('aa-bb-cc')).to eq(3)
+    end
+
+    it 'strips underscore separators before counting' do
+      expect(described_class.byte_length('aa_bb_cc')).to eq(3)
+    end
+
+    it 'handles combined prefix, separators, and case' do
+      expect(described_class.byte_length('0x AA:BB-CC_dd')).to eq(4)
+    end
+
+    it 'returns 0 for empty string' do
+      expect(described_class.byte_length('')).to eq(0)
+    end
+
+    it 'raises Error for odd-length hex' do
+      expect { described_class.byte_length('abc') }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for invalid hex characters' do
+      expect { described_class.byte_length('zzzz') }.to raise_error(described_class::Error, /non-hex/)
+    end
+
+    it 'raises Error for non-string' do
+      expect { described_class.byte_length(123) }.to raise_error(described_class::Error)
+    end
+  end
+
   describe '.secure_equal?' do
     it 'returns true for identical hex' do
       expect(described_class.secure_equal?('aabb', 'aabb')).to be true
