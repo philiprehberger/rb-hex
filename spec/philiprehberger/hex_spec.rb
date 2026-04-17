@@ -821,4 +821,97 @@ RSpec.describe Philiprehberger::Hex do
       expect { described_class.not('zz') }.to raise_error(described_class::Error)
     end
   end
+
+  describe '.to_binary_string' do
+    it 'converts a single byte to 8-bit binary string' do
+      expect(described_class.to_binary_string('ff')).to eq('11111111')
+    end
+
+    it 'zero-pads bytes to 8 bits' do
+      expect(described_class.to_binary_string('01')).to eq('00000001')
+    end
+
+    it 'converts multiple bytes' do
+      expect(described_class.to_binary_string('aabb')).to eq('1010101010111011')
+    end
+
+    it 'groups bits by N with spaces' do
+      expect(described_class.to_binary_string('aabb', group: 4)).to eq('1010 1010 1011 1011')
+    end
+
+    it 'groups bits by 8' do
+      expect(described_class.to_binary_string('aabb', group: 8)).to eq('10101010 10111011')
+    end
+
+    it 'strips 0x prefix before converting' do
+      expect(described_class.to_binary_string('0xaabb')).to eq('1010101010111011')
+    end
+
+    it 'strips 0X prefix before converting' do
+      expect(described_class.to_binary_string('0XFF')).to eq('11111111')
+    end
+
+    it 'converts 00 to eight zeros' do
+      expect(described_class.to_binary_string('00')).to eq('00000000')
+    end
+
+    it 'raises Error for odd-length hex' do
+      expect { described_class.to_binary_string('abc') }.to raise_error(described_class::Error, /odd length/)
+    end
+
+    it 'raises Error for invalid hex characters' do
+      expect { described_class.to_binary_string('zz') }.to raise_error(described_class::Error, /non-hex/)
+    end
+
+    it 'raises Error for non-string input' do
+      expect { described_class.to_binary_string(123) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe '.from_binary_string' do
+    it 'converts an 8-bit binary string to hex' do
+      expect(described_class.from_binary_string('11111111')).to eq('ff')
+    end
+
+    it 'converts multiple bytes' do
+      expect(described_class.from_binary_string('1010101010111011')).to eq('aabb')
+    end
+
+    it 'strips whitespace before converting' do
+      expect(described_class.from_binary_string('1010 1010 1011 1011')).to eq('aabb')
+    end
+
+    it 'zero-pads to a multiple of 8 bits' do
+      expect(described_class.from_binary_string('1')).to eq('01')
+    end
+
+    it 'handles all zeros' do
+      expect(described_class.from_binary_string('00000000')).to eq('00')
+    end
+
+    it 'raises Error for non-binary characters' do
+      expect { described_class.from_binary_string('10201010') }.to raise_error(described_class::Error, /only 0 and 1/)
+    end
+
+    it 'raises Error for empty string after stripping whitespace' do
+      expect { described_class.from_binary_string('   ') }.to raise_error(described_class::Error, /empty/)
+    end
+
+    it 'raises Error for non-string input' do
+      expect { described_class.from_binary_string(123) }.to raise_error(described_class::Error)
+    end
+  end
+
+  describe 'to_binary_string/from_binary_string roundtrip' do
+    it 'roundtrips a hex string through binary' do
+      hex = 'deadbeef'
+      expect(described_class.from_binary_string(described_class.to_binary_string(hex))).to eq(hex)
+    end
+
+    it 'roundtrips with grouping' do
+      hex = 'aabb'
+      binary = described_class.to_binary_string(hex, group: 4)
+      expect(described_class.from_binary_string(binary)).to eq(hex)
+    end
+  end
 end

@@ -150,6 +150,17 @@ Philiprehberger::Hex.from_int(255)             # => "ff"
 Philiprehberger::Hex.from_int(255, bytes: 4)   # => "000000ff"
 ```
 
+### Binary String
+
+```ruby
+Philiprehberger::Hex.to_binary_string('aabb')             # => "1010101010111011"
+Philiprehberger::Hex.to_binary_string('aabb', group: 4)   # => "1010 1010 1011 1011"
+Philiprehberger::Hex.to_binary_string('0xff')             # => "11111111"
+
+Philiprehberger::Hex.from_binary_string('11111111')           # => "ff"
+Philiprehberger::Hex.from_binary_string('1010 1010 1011 1011') # => "aabb"
+```
+
 ## API
 
 | Method | Description |
@@ -176,6 +187,8 @@ Philiprehberger::Hex.from_int(255, bytes: 4)   # => "000000ff"
 | `Hex.pad(hex, length:, side:)` | Pad hex string to target byte length with zeros |
 | `Hex.to_int(hex)` | Convert a hex string to an integer |
 | `Hex.from_int(int, bytes:)` | Convert an integer to a hex string |
+| `Hex.to_binary_string(hex, group:)` | Convert a hex string to a binary digit string, with optional bit grouping |
+| `Hex.from_binary_string(binary)` | Convert a binary digit string to a lowercase hex string |
 
 ## Development
 
