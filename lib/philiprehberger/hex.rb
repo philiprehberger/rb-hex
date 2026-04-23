@@ -333,6 +333,40 @@ module Philiprehberger
       bytes_from(hex).map { |b| Kernel.format('%02x', ~b & 0xFF) }.join
     end
 
+    # Convert a hex string to a binary digit string
+    # Each byte is always zero-padded to 8 bits
+    # Strips 0x/0X prefix if present
+    #
+    # @param hex [String] hex-encoded string
+    # @param group [Integer, nil] insert a space every N bits when given
+    # @return [String] binary digit string
+    def self.to_binary_string(hex, group: nil)
+      validate_string!(hex)
+      stripped = strip_prefix(hex)
+      raise Error, 'invalid hex string: odd length' if stripped.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless stripped.empty? || valid?(stripped)
+
+      bits = stripped.scan(/../).map { |byte| byte.to_i(16).to_s(2).rjust(8, '0') }.join
+      return bits unless group
+
+      bits.scan(/.{1,#{group}}/).join(' ')
+    end
+
+    # Convert a binary digit string to a lowercase hex string
+    # Strips whitespace; zero-pads to a multiple of 8 bits if needed
+    #
+    # @param binary [String] binary digit string (may contain spaces)
+    # @return [String] lowercase hex string
+    def self.from_binary_string(binary)
+      validate_string!(binary)
+      stripped = binary.gsub(/\s/, '')
+      raise Error, 'invalid binary string: must contain only 0 and 1' unless stripped.match?(/\A[01]*\z/)
+      raise Error, 'invalid binary string: empty' if stripped.empty?
+
+      padded = stripped.rjust((stripped.length + 7) / 8 * 8, '0')
+      padded.scan(/.{8}/).map { |byte| byte.to_i(2).to_s(16).rjust(2, '0') }.join
+    end
+
     # Strip 0x/0X prefix from a hex string
     #
     # @param hex [String]

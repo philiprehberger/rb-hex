@@ -7,6 +7,12 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-16
+
+### Added
+- `Hex.to_binary_string(hex, group:)` to convert a hex string to a binary digit string, with optional bit grouping
+- `Hex.from_binary_string(binary)` to convert a binary digit string back to lowercase hex
+
 ## [0.5.0] - 2026-04-15
 
 ### Added
