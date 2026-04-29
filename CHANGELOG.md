@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-04-29
+
+### Added
+- `Hex.zeros(bytes)` and `Hex.ones(bytes)` to generate constant-byte hex strings (test fixtures, padding, bitmask construction)
+
 ## [0.6.0] - 2026-04-16
 
 ### Added

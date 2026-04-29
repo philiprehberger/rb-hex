@@ -344,6 +344,34 @@ RSpec.describe Philiprehberger::Hex do
     end
   end
 
+  describe '.zeros' do
+    it 'returns empty string for 0 bytes' do
+      expect(described_class.zeros(0)).to eq('')
+    end
+
+    it 'returns four zero bytes' do
+      expect(described_class.zeros(4)).to eq('00000000')
+    end
+
+    it 'raises ArgumentError for negative bytes' do
+      expect { described_class.zeros(-1) }.to raise_error(ArgumentError)
+    end
+  end
+
+  describe '.ones' do
+    it 'returns empty string for 0 bytes' do
+      expect(described_class.ones(0)).to eq('')
+    end
+
+    it 'returns two all-ones bytes' do
+      expect(described_class.ones(2)).to eq('ffff')
+    end
+
+    it 'raises ArgumentError for negative bytes' do
+      expect { described_class.ones(-1) }.to raise_error(ArgumentError)
+    end
+  end
+
   describe '.extract_range' do
     it 'extracts bytes from the beginning' do
       expect(described_class.extract_range('aabbccdd', offset: 0, length: 2)).to eq('aabb')

@@ -123,6 +123,13 @@ Philiprehberger::Hex.not('ff00')          # => "00ff"
 Philiprehberger::Hex.random(16)  # => "a3f2b7c891d4e5f6..." (32 hex chars)
 ```
 
+### Constant Hex
+
+```ruby
+Philiprehberger::Hex.zeros(4) # => "00000000"
+Philiprehberger::Hex.ones(2)  # => "ffff"
+```
+
 ### Extract Range
 
 ```ruby
@@ -182,6 +189,8 @@ Philiprehberger::Hex.from_binary_string('1010 1010 1011 1011') # => "aabb"
 | `Hex.or(hex1, hex2)` | Bitwise OR of two hex strings |
 | `Hex.not(hex)` | Bitwise NOT (one's complement) of a hex string |
 | `Hex.random(n)` | Generate a random hex string of n bytes |
+| `Hex.zeros(bytes)` | Hex string of `bytes` zero bytes |
+| `Hex.ones(bytes)` | Hex string of `bytes` all-ones bytes |
 | `Hex.extract_range(hex, offset:, length:)` | Extract a range of bytes from a hex string |
 | `Hex.swap_endian(hex)` | Reverse byte order of a hex string |
 | `Hex.pad(hex, length:, side:)` | Pad hex string to target byte length with zeros |

@@ -146,6 +146,28 @@ module Philiprehberger
       SecureRandom.hex(n)
     end
 
+    # Hex string of `bytes` zero bytes ('00' * bytes).
+    #
+    # @param bytes [Integer] non-negative byte count
+    # @return [String] lowercase hex
+    # @raise [ArgumentError] when bytes is negative
+    def self.zeros(bytes)
+      raise ArgumentError, 'bytes must be non-negative' if bytes.negative?
+
+      '00' * bytes
+    end
+
+    # Hex string of `bytes` all-ones bytes ('ff' * bytes).
+    #
+    # @param bytes [Integer] non-negative byte count
+    # @return [String] lowercase hex
+    # @raise [ArgumentError] when bytes is negative
+    def self.ones(bytes)
+      raise ArgumentError, 'bytes must be non-negative' if bytes.negative?
+
+      'ff' * bytes
+    end
+
     # Extract a range of bytes from a hex string
     #
     # @param hex [String] hex-encoded string
