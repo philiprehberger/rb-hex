@@ -389,6 +389,25 @@ module Philiprehberger
       padded.scan(/.{8}/).map { |byte| byte.to_i(2).to_s(16).rjust(2, '0') }.join
     end
 
+    # Count the number of `1` bits in a hex string
+    #
+    # Useful for bitset cardinality, Bloom-filter density, Hamming-weight
+    # distance metrics, and any hex-encoded bit-vector workload. Strips an
+    # optional `0x`/`0X` prefix and returns `0` for empty input.
+    #
+    # @param hex [String] hex-encoded string (even length after prefix strip)
+    # @return [Integer] number of set bits across all bytes
+    # @raise [Error] if the string is not valid hex or has odd length
+    def self.popcount(hex)
+      validate_string!(hex)
+      stripped = strip_prefix(hex)
+      return 0 if stripped.empty?
+      raise Error, 'invalid hex string: odd length' if stripped.length.odd?
+      raise Error, 'invalid hex string: non-hex characters' unless valid?(stripped)
+
+      stripped.scan(/../).sum { |byte| byte.to_i(16).to_s(2).count('1') }
+    end
+
     # Strip 0x/0X prefix from a hex string
     #
     # @param hex [String]

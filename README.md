@@ -168,6 +168,19 @@ Philiprehberger::Hex.from_binary_string('11111111')           # => "ff"
 Philiprehberger::Hex.from_binary_string('1010 1010 1011 1011') # => "aabb"
 ```
 
+### Bit Population Count
+
+```ruby
+Philiprehberger::Hex.popcount('0000')   # => 0
+Philiprehberger::Hex.popcount('ffff')   # => 16
+Philiprehberger::Hex.popcount('5a')     # => 4   (01011010)
+Philiprehberger::Hex.popcount('0xff')   # => 8
+```
+
+Counts the number of `1` bits in the encoded value. Useful for bitset
+cardinality, Bloom-filter density, and Hamming-weight computations on
+hex-encoded bit vectors.
+
 ## API
 
 | Method | Description |
@@ -198,6 +211,7 @@ Philiprehberger::Hex.from_binary_string('1010 1010 1011 1011') # => "aabb"
 | `Hex.from_int(int, bytes:)` | Convert an integer to a hex string |
 | `Hex.to_binary_string(hex, group:)` | Convert a hex string to a binary digit string, with optional bit grouping |
 | `Hex.from_binary_string(binary)` | Convert a binary digit string to a lowercase hex string |
+| `Hex.popcount(hex)` | Count the number of `1` bits in a hex string (Hamming weight) |
 
 ## Development
 

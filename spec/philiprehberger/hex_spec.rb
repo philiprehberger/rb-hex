@@ -942,4 +942,47 @@ RSpec.describe Philiprehberger::Hex do
       expect(described_class.from_binary_string(binary)).to eq(hex)
     end
   end
+
+  describe '.popcount' do
+    it 'returns 0 for an all-zero hex string' do
+      expect(described_class.popcount('0000')).to eq(0)
+    end
+
+    it 'returns 16 for an all-ones two-byte hex string' do
+      expect(described_class.popcount('ffff')).to eq(16)
+    end
+
+    it 'counts mixed bits correctly' do
+      expect(described_class.popcount('0f')).to eq(4)
+      expect(described_class.popcount('5a')).to eq(4)
+      expect(described_class.popcount('a5a5')).to eq(8)
+    end
+
+    it 'is case-insensitive' do
+      expect(described_class.popcount('FF')).to eq(8)
+    end
+
+    it 'strips a 0x prefix' do
+      expect(described_class.popcount('0xff')).to eq(8)
+    end
+
+    it 'returns 0 for empty input' do
+      expect(described_class.popcount('')).to eq(0)
+    end
+
+    it 'raises for odd-length input' do
+      expect { described_class.popcount('abc') }.to raise_error(described_class::Error)
+    end
+
+    it 'raises for non-hex characters' do
+      expect { described_class.popcount('zz') }.to raise_error(described_class::Error)
+    end
+
+    it 'matches the bit count of the encoded integer' do
+      [0xdeadbeef, 0x123456789abcdef0].each do |int|
+        hex = described_class.from_int(int)
+        expect(described_class.popcount(hex)).to eq(int.to_s(2).count('1'))
+      end
+    end
+  end
 end

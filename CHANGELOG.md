@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-05-09
+
+### Added
+- `Hex.popcount(hex)` — count the number of `1` bits in a hex string (Hamming weight). Useful for bitset cardinality, Bloom-filter density, and any hex-encoded bit-vector workload. Strips an optional `0x` prefix and returns `0` for empty input.
+
 ## [0.7.0] - 2026-04-29
 
 ### Added
